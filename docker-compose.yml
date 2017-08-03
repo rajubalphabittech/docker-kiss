@@ -1,0 +1,44 @@
+version: "2"
+services:
+  tomcat7:
+    build: ./application/tomcat
+    ports:
+      - "8080:8080"
+  httpd:
+    build: ./application/httpd
+    links: 
+      - tomcat7
+    depends_on:
+      - tomcat7
+    ports:
+      - "80:80"
+    environment:
+      - APPNAME=hello
+      - SERVICE_NAME=localhost
+      - BACKEND_URL=tomcat7:8080
+  influxdb:
+    image: influxdb
+    ports: 
+      - "8083:8083"
+      - "8086:8086"
+    volumes:
+      - "/tmp/influxdb:/var/lib/influxdb"  # <--- Change Me!!
+    environment:
+    #  - INFLUXDB_DATA_QUERY_LOG_ENABLED=false
+       - INFLUXDB_ADMIN_ENABLED=true
+  telegraf:
+    build: ./metrics/telegraf
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"
+    links:
+      - influxdb
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "81:3000"
+    links:
+      - influxdb
+    environment:
+      - "GF_SECURITY_ADMIN_PASSWORD=admin"
+    volumes:
+      - "/tmp/grafana:/var/lib/grafana" # <-- Change Me!!

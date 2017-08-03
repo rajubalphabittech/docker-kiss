@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+# Apache gets grumpy about PID files pre-existing
+rm -f /usr/local/apache2/logs/httpd.pid
+
+sed -i -e "s/APPNAME/${APPNAME}/" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+sed -i -e "s/SERVICEURL/${SERVICE_NAME}/" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+sed -i -e "s/BACKENDURL/${BACKEND_URL}/" /usr/local/apache2/conf/extra/httpd-vhosts.conf
+
+TZ='Europe/Rome'
+ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+exec httpd -DFOREGROUND
